@@ -13,13 +13,15 @@ import pymongo
 class JsonWriterPipeline(object):
     def __init__(self):
         self.file = codecs.open('items.json', 'wb', encoding='utf-8')
+        self.file.write('[')
 
     def process_item(self, item, spider):
-        line = json.dumps(dict(item), ensure_ascii=False) + '\n'
+        line = json.dumps(dict(item), ensure_ascii=False) + ',\n'
         self.file.write(line)
         return item
 
     def spider_closed(self, spider):
+        self.file.write(']')
         self.file.close()
 
 
