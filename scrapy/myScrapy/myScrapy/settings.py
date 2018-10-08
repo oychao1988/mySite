@@ -14,10 +14,13 @@ BOT_NAME = 'myScrapy'
 SPIDER_MODULES = ['myScrapy.spiders']
 NEWSPIDER_MODULE = 'myScrapy.spiders'
 
-
+LOG_LEVEL = 'INFO'
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'myScrapy (+http://www.yourdomain.com)'
-
+MY_USER_AGENT = [
+    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36",
+]
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
 
@@ -39,28 +42,36 @@ ROBOTSTXT_OBEY = True
 #TELNETCONSOLE_ENABLED = False
 
 # Override the default request headers:
-#DEFAULT_REQUEST_HEADERS = {
-#   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-#   'Accept-Language': 'en',
-#}
+DEFAULT_REQUEST_HEADERS = {
+    "Accept": "application/json,text/javascript, */*;q=0.01",
+  # 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    "Accept-Language": "zh-CN,zh;q=0.8",
+}
 
 # Enable or disable spider middlewares
 # See https://doc.scrapy.org/en/latest/topics/spider-middleware.html
-#SPIDER_MIDDLEWARES = {
-#    'myScrapy.middlewares.MyscrapySpiderMiddleware': 543,
-#}
+# SPIDER_MIDDLEWARES = {
+#     'myScrapy.middlewares.MyscrapySpiderMiddleware': 543,
+# }
 
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
-#    'myScrapy.middlewares.MyscrapyDownloaderMiddleware': 543,
-#}
+DOWNLOADER_MIDDLEWARES = {
+    'scrapy.downloadermiddleware.useragent.UserAgentMiddleware': None,
+    # 'myScrapy.middlewares.MyscrapyDownloaderMiddleware': 543,
+    'myScrapy.middlewares.MyUserAgentMiddleware': 400,
+}
 
 # Enable or disable extensions
 # See https://doc.scrapy.org/en/latest/topics/extensions.html
 #EXTENSIONS = {
 #    'scrapy.extensions.telnet.TelnetConsole': None,
 #}
+
+FEED_EXPORTERS_BASE = {
+    'json': 'myScrapy.recode.recodes',#这个位置注意是文件索引，根据你实际情况修改。
+    'jsonlines' : 'scrapy.contrib.exporter.JsonLinesItemExporter'
+}
 
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html

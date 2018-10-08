@@ -2,3 +2,4 @@
 *.py[cod]
 *.json
 *.txt
+mysql/data/
