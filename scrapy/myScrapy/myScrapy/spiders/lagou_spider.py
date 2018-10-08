@@ -87,7 +87,14 @@ class LagouRecruitSpider(scrapy.spiders.Spider):
             RecruitItem['category'] = category
             RecruitItem['category_url'] = category_url
 
-            yield scrapy.Request(url=category_url, cookies=self.cookie, callback=self.parse_url)
+            # 粗暴的添加分页
+            for i in range(30):
+                try:
+                    category_sub_url = category_url + str(i+1)
+                    yield scrapy.Request(url=category_sub_url, cookies=self.cookie, callback=self.parse_url)
+                except:
+                    pass
+
             # yield RecruitItem
 
     def parse_url(self, response):
