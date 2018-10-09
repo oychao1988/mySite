@@ -4,7 +4,7 @@
 #
 # See documentation in:
 # https://doc.scrapy.org/en/latest/topics/spider-middleware.html
-
+import requests
 from scrapy import signals
 import scrapy
 from scrapy.downloadermiddlewares.useragent import UserAgentMiddleware
@@ -119,3 +119,26 @@ class MyUserAgentMiddleware(UserAgentMiddleware):
     def process_request(self, request, spider):
         agent = random.choice(self.user_agent)
         request.headers['User-Agent'] = agent
+
+
+class ProxyMiddleware(object):
+    def process_request(self, request, spider):
+        for i in range(3):
+            ip_port = requests.get("http://127.0.0.1:5010/get/").text
+            proxy = "http://%s" % ip_port
+            try:
+                status_code = requests.get('http://127.0.0.1:5010/', proxies={'http': proxy}).status_code
+                if status_code == 404:
+                    proxy = 'https://%s' % ip_port
+                break
+            except Exception as e:
+                proxy = 'https://%s' % ip_port
+            try:
+                status_code = requests.get('http://127.0.0.1:5010/', proxies={'https': proxy}).status_code
+                if status_code == 404:
+                    requests.get('http://127.0.0.1:5010/delete?proxy=%s' % ip_port)
+                    continue
+            except Exception as e:
+                requests.get('http://127.0.0.1:5010/delete?proxy=%s' % ip_port)
+        print('proxy:', proxy, 'status_code:', status_code)
+        request.meta['proxy'] = proxy
