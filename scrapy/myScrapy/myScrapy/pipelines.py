@@ -9,6 +9,8 @@ import json
 
 import pymongo
 
+from myScrapy import settings
+
 
 class JsonWriterPipeline(object):
     def __init__(self):
@@ -26,24 +28,34 @@ class JsonWriterPipeline(object):
 
 
 class MongoPipeline(object):
-    collection_name = 'scrapy_items'
-
-    def __init__(self, mongo_uri, mongo_db):
-        self.mongo_uri = mongo_uri
-        self.mongo_db = mongo_db
-
-    @classmethod
-    def from_crawler(cls, crawler):
-        return cls(mongo_uri=crawler.settings.get('MONGO_URI'),
-                   mongo_db=crawler.settings.get('MONGO_DATABASE', 'items'))
+    def __init__(self):
+        self.collection_name = None
+        self.mongo_uri = settings.MONGO_URI
+        self.mongo_db = settings.MONGO_DB
+        self.user = settings.MONGO_USER
+        self.pwd = settings.MONGO_PWD
 
     def open_spider(self, spider):
         self.client = pymongo.MongoClient(self.mongo_uri)
+        # 用户登录验证
+        self.client.scrapydb.authenticate(self.user, self.pwd)
         self.db = self.client[self.mongo_db]
-
-    def close_spider(self, spider):
-        self.client.close()
 
     def process_item(self, item, spider):
         self.db[self.collection_name].insert(dict(item))
         return item
+
+    def close_spider(self, spider):
+        self.client.close()
+
+
+class LagouMongoPipeline(MongoPipeline):
+    def __init__(self):
+        super(LagouMongoPipeline, self).__init__()
+        self.collection_name = settings.MONGO_COLL_LAGOU
+
+
+class TencentMongoPipeline(MongoPipeline):
+    def __init__(self):
+        super(TencentMongoPipeline, self).__init__()
+        self.collection_name = settings.MONGO_COLL_TENCENT

@@ -113,7 +113,7 @@ class MyUserAgentMiddleware(UserAgentMiddleware):
     @classmethod
     def from_crawler(cls, crawler):
         return cls(
-            user_agent=crawler.settings.get('MY_USER_AGENT')
+            user_agent=crawler.settings.get('USER_AGENTS_LIST')
         )
 
     def process_request(self, request, spider):

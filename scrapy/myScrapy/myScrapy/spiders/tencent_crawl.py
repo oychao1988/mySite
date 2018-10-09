@@ -11,6 +11,9 @@ class TencentRecruitCrawlSpider(CrawlSpider):
     # 提取匹配'http://hr.tencent.com/position.php?&start=\d+#a'的链接
     page_lx = LinkExtractor(allow=('start=\d+'))
     rules = [Rule(page_lx, callback='parseContent', follow=True)]
+    custom_settings = {
+        'ITEM_PIPELINES': {'myScrapy.pipelines.TencentMongoPipeline': 300},
+    }
 
     def parseContent(self, response):
         print(response.url)
@@ -34,9 +37,3 @@ class TencentRecruitCrawlSpider(CrawlSpider):
             item['publishTime'] = publishTime
 
             yield item
-
-
-class LagouRecruitCrawlSpider(CrawlSpider):
-    name = 'LagouRecruitCrawlSpider'
-    allowed_domain = ['']
-    start_urls = ['https://www.lagou.com/jobs/list_python?']

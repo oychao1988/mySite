@@ -2,7 +2,7 @@ from scrapy.cmdline import execute
 
 # execute(['scrapy', 'crawl', 'LagouGETRecruitSpider'])
 # execute(['scrapy', 'crawl', 'LagouGETRecruitSpider', '-o', 'positions_data.json'])
-def search_position(city, keyword, pageSise):
+def get_lagou_position(city, keyword, pageSise):
     execute(['scrapy',
              'crawl',
              'LagouPOSTRecruitSpider',
@@ -11,4 +11,10 @@ def search_position(city, keyword, pageSise):
              '-a', 'keyword=%s' % keyword,
              '-a', 'pageSize=%d' % pageSise])
 
-search_position('深圳', 'Python', 1)
+def get_tencent_position():
+    execute(['scrapy',
+             'crawl',
+             'TencentRecruitCrawlSpider'])
+
+# get_lagou_position('深圳', 'Python', 1)
+get_tencent_position()

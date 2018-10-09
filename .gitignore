@@ -3,3 +3,5 @@
 *.json
 *.txt
 mysql/data/
+.scrapy/
+logs/

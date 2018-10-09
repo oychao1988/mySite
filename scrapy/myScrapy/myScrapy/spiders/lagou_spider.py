@@ -9,6 +9,7 @@ import time
 from myScrapy.items import LagouRecruitItem
 from urllib.parse import urlencode
 
+from myScrapy.utils.log import logger
 from myScrapy.utils.utils import cookie_transfer
 
 lagou_cookie = "user_trace_token=20181003162424-bc2e8234-c6e5-11e8-a8cf-525400f775ce; LGUID=20181003162424-bc2e8853-c6e5-11e8-a8cf-525400f775ce; index_location_city=%E6%B7%B1%E5%9C%B3; WEBTJ-ID=20181008082215-166510d9256373-0c1c9d5e3a71e-3e70055f-1049088-166510d925740e; sajssdk_2015_cross_new_user=1; _gid=GA1.2.1131033380.1538975278; JSESSIONID=ABAAABAAADEAAFI2AA9D579308DA2197B701A300CA7B0A0; TG-TRACK-CODE=jobs_code; SEARCH_ID=1b2e80f29fa7414eb6b7f1dbd29fcaf7; X_MIDDLE_TOKEN=7db0d3b86be2c0e99615dfe2e6441f01; X_HTTP_TOKEN=84a16a5dc6d5de3f8be58743a2b0fe71; sensorsdata2015jssdkcross=%7B%22distinct_id%22%3A%22166527cbe742a0-094a56f8fc244b-3e70055f-1049088-166527cbe762e7%22%2C%22%24device_id%22%3A%22166527cbe742a0-094a56f8fc244b-3e70055f-1049088-166527cbe762e7%22%2C%22props%22%3A%7B%22%24latest_traffic_source_type%22%3A%22%E7%9B%B4%E6%8E%A5%E6%B5%81%E9%87%8F%22%2C%22%24latest_referrer%22%3A%22%22%2C%22%24latest_referrer_host%22%3A%22%22%2C%22%24latest_search_keyword%22%3A%22%E6%9C%AA%E5%8F%96%E5%88%B0%E5%80%BC_%E7%9B%B4%E6%8E%A5%E6%89%93%E5%BC%80%22%7D%7D; _ga=GA1.2.1686656861.1538555064; _gat=1; Hm_lvt_4233e74dff0ae5bd0a3d81c6ccf756e6=1538555064,1538555073,1538958136,1538958145; Hm_lpvt_4233e74dff0ae5bd0a3d81c6ccf756e6=1539011656; LGSID=20181008221248-3c47a43e-cb04-11e8-bb9c-5254005c3644; LGRID=20181008231416-d2773919-cb0c-11e8-ac8f-525400f775ce"
@@ -109,6 +110,9 @@ class LagouGETRecruitSpider(scrapy.spiders.Spider):
 
 class LagouPOSTRecruitSpider(scrapy.spiders.Spider):
     name = 'LagouPOSTRecruitSpider'
+    custom_settings = {
+        'ITEM_PIPELINES': {'myScrapy.pipelines.LagouMongoPipeline': 300},
+    }
     def __init__(self, city='深圳', keyword='Python', pageSize=None, *args, **kwargs):
         super(LagouPOSTRecruitSpider, self).__init__(*args, **kwargs)
         self.url = 'https://www.lagou.com/jobs/positionAjax.json?'
@@ -159,16 +163,16 @@ class LagouPOSTRecruitSpider(scrapy.spiders.Spider):
                 res_dict = json.loads(res.text)
                 position_result = res_dict['content']['positionResult']['result']
             except Exception as e:
-                print('Exception:', e)
-                print(res_dict)
+                logger.error(e)
                 continue
 
             # 将职位信息保存至position_item
             for position in position_result:
                 detail_url = self.detail_url % position['positionId']
                 # 请求详情页，获取职位描述
-                try:
-                    for i in range(3):
+                description = []
+                for i in range(3):
+                    try:
                         res = requests.session().get(detail_url, headers={
                                  'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36',
                              })
@@ -176,17 +180,15 @@ class LagouPOSTRecruitSpider(scrapy.spiders.Spider):
                         description = html.xpath('//*[@id="job_detail"]/dd[2]/div/p/text()')
                         if description:
                             break
-                        time.sleep(5)
-                except Exception as e:
-                    print('Exception:', e)
-                    print('**detail_url:', detail_url)
-                    continue
-                time.sleep(5)
-                print('detail_url:', detail_url, description)
+                        logger.info('重新获取职位描述:%s' % detail_url)
+                    except Exception as e:
+                        logger.error(e)
+                        pass
+                    time.sleep(5)
 
                 position_item = LagouRecruitItem()
                 position_item['description'] = description
                 for k in position.keys():
                     position_item[k] = position[k]
                 yield position_item
-            time.sleep(20)
+            time.sleep(10)
