@@ -1,5 +1,7 @@
 import json
 import re
+from lxml import etree
+
 import requests
 import scrapy
 import time
@@ -132,8 +134,8 @@ class LagouPOSTRecruitSpider(scrapy.spiders.Spider):
                         "Referer": "https://www.lagou.com/jobs/list_%s?%s&cl=false&fromSearch=true&labelWords=&suginput=" %
                                    (urlencode({'keyword': keyword}).split('=')[-1], urlencode({'city': city})),
                         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36",
-                        "X-Anit-Forge-Code": "0",
-                        "X-Anit-Forge-Token": "None",
+                        # "X-Anit-Forge-Code": "0",
+                        # "X-Anit-Forge-Token": "None",
                         "X-Requested-With": "XMLHttpRequest",
                         }
         self.cookie = cookie_transfer(lagou_cookie)
@@ -160,17 +162,31 @@ class LagouPOSTRecruitSpider(scrapy.spiders.Spider):
                 print('Exception:', e)
                 print(res_dict)
                 continue
+
             # 将职位信息保存至position_item
             for position in position_result:
+                detail_url = self.detail_url % position['positionId']
+                # 请求详情页，获取职位描述
+                try:
+                    for i in range(3):
+                        res = requests.session().get(detail_url, headers={
+                                 'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36',
+                             })
+                        html = etree.HTML(res.text)
+                        description = html.xpath('//*[@id="job_detail"]/dd[2]/div/p/text()')
+                        if description:
+                            break
+                        time.sleep(5)
+                except Exception as e:
+                    print('Exception:', e)
+                    print('**detail_url:', detail_url)
+                    continue
+                time.sleep(5)
+                print('detail_url:', detail_url, description)
+
                 position_item = LagouRecruitItem()
+                position_item['description'] = description
                 for k in position.keys():
                     position_item[k] = position[k]
                 yield position_item
-            time.sleep(30)
-            for position in position_result:
-                print(self.detail_url % position['positionId'])
-                yield scrapy.Request(url=self.detail_url % position['positionId'], callback=self.parse_detail)
-                time.sleep(5)
-
-    def parse_detail(self, response):
-        print('parse_detail:', response.url)
+            time.sleep(20)

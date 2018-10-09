@@ -69,3 +69,4 @@ class LagouRecruitItem(scrapy.Item):
     subwayline = scrapy.Field()  # 地铁线路
     thirdType = scrapy.Field()  # 工作类型3
     workYear = scrapy.Field()  # 工作年限
+    description = scrapy.Field()  # 职位描述

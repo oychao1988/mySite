@@ -1,3 +1,6 @@
+import re
+from lxml import etree
+
 import requests
 
 
@@ -26,3 +29,20 @@ def lagou():
     response = requests.post(url, headers=headers, params=query_params, data=form_datas)
     print(response.text)
 
+def lagou_detail(url):
+    session = requests.session()
+    response = session.get(url,
+                     headers={
+                         'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36',
+                     })
+    resHtml = response.text
+    html = etree.HTML(resHtml)
+    # 职位描述
+    description = html.xpath('//*[@id="job_detail"]/dd[2]/div/p/text()')
+    return html
+
+
+if __name__ == '__main__':
+    company_link = 'https://www.lagou.com/jobs/{pos_id}.html'.format(pos_id=3893733)
+    response = lagou_detail(company_link)
+    print(response.text)
