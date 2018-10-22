@@ -1,8 +1,10 @@
+import os
 import re
+from retrying import retry
+import time
 from lxml import etree
 
 import requests
-
 
 def lagou():
     headers = {"Accept": "application/json,text/javascript, */*;q=0.01",
@@ -41,8 +43,66 @@ def lagou_detail(url):
     description = html.xpath('//*[@id="job_detail"]/dd[2]/div/p/text()')
     return html
 
+@retry(stop_max_attempt_number=3)
+def proxy_Test(proxy):
+    print('processing:', proxy)
+    response = requests.get('http://httpbin.org', proxies={'http': proxy}, timeout=5)
+    assert response.status_code == 200
+    return proxy
+
+def proxy_pool(queue):
+    for i in range(5):
+        print(os.getpid(), i+1, '次')
+        time.sleep(1)
+        ip_port = requests.get("http://182.61.60.153:5010/get/").text
+        proxy = "http://%s" % ip_port
+        try:
+            proxy = proxy_Test(proxy)
+            queue.put(proxy)
+        except Exception as e:
+            print(e)
+
+# def proxyTest():
+#     while True:
+#         # time.sleep(1)
+#         ip_port = requests.get("http://182.61.60.153:5010/get/").text
+#         proxy = "http://%s" % ip_port
+#         for i in range(2):
+#             print(os.getpid(), '第%d次:'%(i+1),proxy)
+#             try:
+#                 response = requests.get('http://httpbin.org', proxies={'http': proxy})
+#                 status_code = response.status_code
+#             except Exception as e:
+#                 status_code = None
+#             if status_code == 200:
+#                 break
+#             else:
+#                 proxy = 'https://%s' % ip_port
+#         else:
+#             print(os.getpid(), 'all down')
+#             continue
+#         print(os.getpid(), 'ok:', proxy)
+#         break
+
 
 if __name__ == '__main__':
-    company_link = 'https://www.lagou.com/jobs/{pos_id}.html'.format(pos_id=3893733)
-    response = lagou_detail(company_link)
-    print(response.text)
+    # company_link = 'https://www.lagou.com/jobs/{pos_id}.html'.format(pos_id=3893733)
+    # response = lagou_detail(company_link)
+    # print(response.text)
+    # lagou()
+    # 183.233.89.222
+    from multiprocessing import Pool
+    from multiprocessing import Process
+    from multiprocessing import JoinableQueue
+
+    queue = JoinableQueue()
+    # pool = Pool(processes=4)
+    for i in range(4):
+        Process(target=proxy_pool, args=(queue,)).start()
+        # pool.apply_async(proxy_pool, args=(queue,))
+    # pool.close()
+    # pool.join()
+    while True:
+        print('queue =', queue.qsize())
+        time.sleep(5)
+    print('ending')

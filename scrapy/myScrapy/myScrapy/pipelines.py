@@ -42,6 +42,7 @@ class MongoPipeline(object):
         self.db = self.client[self.mongo_db]
 
     def process_item(self, item, spider):
+
         self.db[self.collection_name].insert(dict(item))
         return item
 
@@ -59,3 +60,9 @@ class TencentMongoPipeline(MongoPipeline):
     def __init__(self):
         super(TencentMongoPipeline, self).__init__()
         self.collection_name = settings.MONGO_COLL_TENCENT
+
+
+class ZhilianMongoPipeline(MongoPipeline):
+    def __init__(self):
+        super(ZhilianMongoPipeline, self).__init__()
+        self.collection_name = settings.MONGO_COLL_ZHILIAN

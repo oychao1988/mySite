@@ -15,7 +15,10 @@ BOT_NAME = 'myScrapy'
 SPIDER_MODULES = ['myScrapy.spiders']
 NEWSPIDER_MODULE = 'myScrapy.spiders'
 
+# 日志配置
 LOG_LEVEL = 'INFO'
+LOG_FILE = 'logs/log.log'
+
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'myScrapy (+http://www.yourdomain.com)'
 USER_AGENTS_LIST = [
@@ -31,8 +34,8 @@ USER_AGENTS_LIST = [
     "Mozilla/5.0 (X11; Linux i686; U;) Gecko/20070322 Kazehakase/0.4.5"
 ]
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
-# ROBOTSTXT_OBEY = False
+# ROBOTSTXT_OBEY = True
+ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
@@ -92,12 +95,13 @@ ITEM_PIPELINES = {
 }
 
 # 配置mongodb
-MONGO_URI = 'mongodb://localhost:27017'
+MONGO_URI = 'mongodb://182.61.60.153:27017'
 MONGO_DB = 'scrapydb'
 MONGO_USER = 'cino'
 MONGO_PWD = 'cino'
 MONGO_COLL_LAGOU = 'lagouRecruit'
 MONGO_COLL_TENCENT = 'tencentRecruit'
+MONGO_COLL_ZHILIAN = 'zhilianRecruit'
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://doc.scrapy.org/en/latest/topics/autothrottle.html
@@ -110,7 +114,7 @@ AUTOTHROTTLE_MAX_DELAY = 60
 # each remote server
 AUTOTHROTTLE_TARGET_CONCURRENCY = 1.0
 # Enable showing throttling stats for every response received:
-#AUTOTHROTTLE_DEBUG = False
+AUTOTHROTTLE_DEBUG = True
 
 # Enable and configure HTTP caching (disabled by default)
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html#httpcache-middleware-settings
@@ -120,8 +124,9 @@ AUTOTHROTTLE_TARGET_CONCURRENCY = 1.0
 # HTTPCACHE_IGNORE_HTTP_CODES = []
 # HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
-# 日志配置信息
-DEFAULT_LOG_LEVEL = logging.INFO    # 默认等级
-DEFAULT_LOG_FMT = '%(asctime)s %(filename)s [line:%(lineno)d] %(levelname)s: %(message)s'   # 默认日志格式
-DEFUALT_LOG_DATEFMT = '%Y-%m-%d %H:%M:%S'  # 默认时间格式
-DEFAULT_LOG_FILENAME = 'logs/log.log'    # 默认日志文件名称
+# 代理IP服务器
+# PROXY_POOL_SERVER = 'http://123.207.35.36:5010/get/'
+PROXY_POOL_SERVER = 'http://182.61.60.153:5010/get/'
+
+# 查重服务器
+DUPLICATE_CHECKING_SERVER = 'http://182.61.60.153:5020/recruits/duplicateChecking'

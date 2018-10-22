@@ -9,7 +9,6 @@ import time
 from myScrapy.items import LagouRecruitItem
 from urllib.parse import urlencode
 
-from myScrapy.utils.log import logger
 from myScrapy.utils.utils import cookie_transfer
 
 lagou_cookie = "user_trace_token=20181003162424-bc2e8234-c6e5-11e8-a8cf-525400f775ce; LGUID=20181003162424-bc2e8853-c6e5-11e8-a8cf-525400f775ce; index_location_city=%E6%B7%B1%E5%9C%B3; WEBTJ-ID=20181008082215-166510d9256373-0c1c9d5e3a71e-3e70055f-1049088-166510d925740e; sajssdk_2015_cross_new_user=1; _gid=GA1.2.1131033380.1538975278; JSESSIONID=ABAAABAAADEAAFI2AA9D579308DA2197B701A300CA7B0A0; TG-TRACK-CODE=jobs_code; SEARCH_ID=1b2e80f29fa7414eb6b7f1dbd29fcaf7; X_MIDDLE_TOKEN=7db0d3b86be2c0e99615dfe2e6441f01; X_HTTP_TOKEN=84a16a5dc6d5de3f8be58743a2b0fe71; sensorsdata2015jssdkcross=%7B%22distinct_id%22%3A%22166527cbe742a0-094a56f8fc244b-3e70055f-1049088-166527cbe762e7%22%2C%22%24device_id%22%3A%22166527cbe742a0-094a56f8fc244b-3e70055f-1049088-166527cbe762e7%22%2C%22props%22%3A%7B%22%24latest_traffic_source_type%22%3A%22%E7%9B%B4%E6%8E%A5%E6%B5%81%E9%87%8F%22%2C%22%24latest_referrer%22%3A%22%22%2C%22%24latest_referrer_host%22%3A%22%22%2C%22%24latest_search_keyword%22%3A%22%E6%9C%AA%E5%8F%96%E5%88%B0%E5%80%BC_%E7%9B%B4%E6%8E%A5%E6%89%93%E5%BC%80%22%7D%7D; _ga=GA1.2.1686656861.1538555064; _gat=1; Hm_lvt_4233e74dff0ae5bd0a3d81c6ccf756e6=1538555064,1538555073,1538958136,1538958145; Hm_lpvt_4233e74dff0ae5bd0a3d81c6ccf756e6=1539011656; LGSID=20181008221248-3c47a43e-cb04-11e8-bb9c-5254005c3644; LGRID=20181008231416-d2773919-cb0c-11e8-ac8f-525400f775ce"
@@ -127,20 +126,10 @@ class LagouPOSTRecruitSpider(scrapy.spiders.Spider):
                       "pn": "1",
                       "kd": keyword}
 
-        self.lagouHeaders = {"Accept": "application/json,text/javascript, */*;q=0.01",
-                        "Accept-Encoding": "gzip, deflate",
-                        "Accept-Language": "zh-CN,zh;q=0.8",
-                        "Connection": "keep-alive",
-                        "Content-Length": "25",
-                        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-                        "Host": "www.lagou.com",
-                        "Origin": "https://www.lagou.com",
+        self.lagouHeaders = {
                         "Referer": "https://www.lagou.com/jobs/list_%s?%s&cl=false&fromSearch=true&labelWords=&suginput=" %
                                    (urlencode({'keyword': keyword}).split('=')[-1], urlencode({'city': city})),
                         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36",
-                        # "X-Anit-Forge-Code": "0",
-                        # "X-Anit-Forge-Token": "None",
-                        "X-Requested-With": "XMLHttpRequest",
                         }
         self.cookie = cookie_transfer(lagou_cookie)
 
@@ -150,7 +139,7 @@ class LagouPOSTRecruitSpider(scrapy.spiders.Spider):
         res_dict = json.loads(res.text)
         # 获取页码
         pageSize = res_dict['content']['pageSize']
-        if (not self.pageSize) or (int(self.pageSize) > int(pageSize)):
+        if (not int(self.pageSize)) or (int(self.pageSize) > int(pageSize)):
             self.pageSize = pageSize
         # 获取所有分页的数据
         for i in range(int(self.pageSize)):
@@ -163,7 +152,6 @@ class LagouPOSTRecruitSpider(scrapy.spiders.Spider):
                 res_dict = json.loads(res.text)
                 position_result = res_dict['content']['positionResult']['result']
             except Exception as e:
-                logger.error(e)
                 continue
 
             # 将职位信息保存至position_item
@@ -180,15 +168,16 @@ class LagouPOSTRecruitSpider(scrapy.spiders.Spider):
                         description = html.xpath('//*[@id="job_detail"]/dd[2]/div/p/text()')
                         if description:
                             break
-                        logger.info('重新获取职位描述:%s' % detail_url)
+                        self.logger.info('重新获取职位描述:%s' % detail_url)
                     except Exception as e:
-                        logger.error(e)
                         pass
                     time.sleep(5)
 
                 position_item = LagouRecruitItem()
                 position_item['description'] = description
+                position_item['detailUrl'] = detail_url
                 for k in position.keys():
                     position_item[k] = position[k]
                 yield position_item
             time.sleep(10)
+

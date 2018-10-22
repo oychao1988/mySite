@@ -16,5 +16,13 @@ def get_tencent_position():
              'crawl',
              'TencentRecruitCrawlSpider'])
 
-# get_lagou_position('深圳', 'Python', 1)
-get_tencent_position()
+
+def get_zhilian_position():
+    execute(['scrapy',
+             'crawl',
+             'ZhilianAjaxSpider',
+             '-a', 'pages=%d' % 0])
+
+# get_lagou_position('深圳', 'Python', 0)
+# get_tencent_position()
+get_zhilian_position()
